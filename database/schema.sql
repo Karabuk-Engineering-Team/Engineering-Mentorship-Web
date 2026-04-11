@@ -1,0 +1,44 @@
+CREATE TABLE COMPANIES (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    industry VARCHAR(255) NOT NULL,
+    website_url VARCHAR(255)
+);
+
+CREATE TABLE POSITIONS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    position_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE EXPERIENCES (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,              
+    company_id INT NOT NULL,           
+    position_id INT NOT NULL,          
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    interview_questions TEXT NULL,
+    
+    CONSTRAINT fk_exp_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_exp_company FOREIGN KEY (company_id) REFERENCES COMPANIES(id) ON DELETE CASCADE,
+    CONSTRAINT fk_exp_position FOREIGN KEY (position_id) REFERENCES POSITIONS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE COMPANY_REVIEWS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    is_anonymous TINYINT(1) DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  
+    CONSTRAINT fk_rev_company FOREIGN KEY (company_id) REFERENCES COMPANIES(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rev_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+
+
+
