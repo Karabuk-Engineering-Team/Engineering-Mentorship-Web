@@ -97,5 +97,41 @@ CREATE TABLE auth_logs (
 
 
 
+ 
+CREATE TABLE mentor_ilanlari (
+    ilan_id INT PRIMARY KEY AUTO_INCREMENT,
+    mezun_id INT NOT NULL, 
+    uzmanlik VARCHAR(100) NOT NULL,
+    baslik VARCHAR(255) NOT NULL,
+    olusturma_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (mezun_id) REFERENCES kullanicilar(item_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE mentor_basvurulari (
+    application_id INT PRIMARY KEY AUTO_INCREMENT,
+    ilan_id INT NOT NULL, 
+    student_id INT NOT NULL, 
+    message TEXT,
+    status ENUM('Beklemede', 'Onaylandı', 'Reddedildi') DEFAULT 'Beklemede',
+    basvuru_tarihi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ilan_id) REFERENCES mentor_ilanlari(ilan_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES kullanicilar(item_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE messages (
+    message_id INT PRIMARY KEY AUTO_INCREMENT,
+    sender_id INT NOT NULL, 
+    receiver_id INT NOT NULL, 
+    message_text TEXT NOT NULL,
+    sender_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES kullanicilar(item_id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES kullanicilar(item_id) ON DELETE CASCADE
+);
+
+
+
+
 
 
