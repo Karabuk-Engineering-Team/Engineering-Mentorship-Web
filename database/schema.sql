@@ -131,6 +131,70 @@ CREATE TABLE messages (
 );
 
 
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('student', 'graduate', 'admin') NOT NULL,
+    is_verified BOOLEAN DEFAULT FALSE NOT NULL,
+    birth_date DATE NULL,
+    gender ENUM('male', 'female', 'other') NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL
+);
+
+
+CREATE TABLE students (
+    user_id INT PRIMARY KEY NOT NULL, -- PK and FK
+    student_number VARCHAR(50) UNIQUE NOT NULL,
+    department VARCHAR(255) NOT NULL,
+    grade INT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE graduates (
+    user_id INT PRIMARY KEY NOT NULL, -- PK and FK
+    graduate_year INT NOT NULL,
+    document_link TEXT NULL,
+    is_open_to_mentorship BOOLEAN DEFAULT FALSE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE admins (
+    user_id INT PRIMARY KEY NOT NULL, -- PK and FK
+    admin_level INT DEFAULT 1 NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE profiles (
+    user_id INT PRIMARY KEY NOT NULL,
+    bio TEXT NULL,
+    website_url VARCHAR(255) NULL,
+    linkedin_url VARCHAR(255) NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE skills (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    skill_name VARCHAR(100) UNIQUE NOT NULL
+);
+
+
+CREATE TABLE user_skills (
+    user_id INT NOT NULL,
+    skill_id INT NOT NULL,
+    PRIMARY KEY (user_id, skill_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+);
+
+
 
 
 
