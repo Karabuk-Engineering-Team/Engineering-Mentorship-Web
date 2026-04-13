@@ -180,9 +180,10 @@ CREATE TABLE messages (
 
 CREATE TABLE auth_logs (
     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    user_id INT NOT NULL,
+    user_id INT NULL,
     ip_address VARCHAR(45) NOT NULL,
     user_agent TEXT NULL,
+    is_success BOOLEAN DEFAULT FALSE,
     login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id),
