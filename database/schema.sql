@@ -1,5 +1,5 @@
 -- ==========================================
--- 1. ADIM: BAĞIMSIZ ANA TABLOLAR
+-- 1. ANA TABLOLAR
 -- ==========================================
 
 CREATE TABLE users (
@@ -20,7 +20,8 @@ CREATE TABLE companies (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     industry VARCHAR(255) NOT NULL,
-    website_url VARCHAR(255)
+    website_url VARCHAR(255),
+    FULLTEXT(name)
 );
 
 CREATE TABLE positions (
@@ -39,7 +40,7 @@ CREATE TABLE forum_categories (
 );
 
 -- ==========================================
--- 2. ADIM: KULLANICI TÜRLERİ VE PROFİLLER (users tablosuna bağlı)
+-- 2. KULLANICI TÜRLERİ VE PROFİLLER
 -- ==========================================
 
 CREATE TABLE students (
@@ -69,11 +70,17 @@ CREATE TABLE profiles (
     bio TEXT NULL,
     website_url VARCHAR(255) NULL,
     linkedin_url VARCHAR(255) NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    current_company_id INT NULL,
+    current_position_id INT NULL,
+    location VARCHAR(255) NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (current_company_id) REFERENCES companies(id) ON DELETE SET NULL,
+    FOREIGN KEY (current_position_id) REFERENCES positions(id) ON DELETE SET NULL,
+    FULLTEXT(bio)
 );
 
 -- ==========================================
--- 3. ADIM: İLİŞKİSEL TABLOLAR (Deneyim, Beceri, Yorum)
+-- 3. İLİŞKİSEL TABLOLAR
 -- ==========================================
 
 CREATE TABLE user_skills (
@@ -86,16 +93,16 @@ CREATE TABLE user_skills (
 
 CREATE TABLE experiences (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,               
-    company_id INT NOT NULL,            
-    position_id INT NOT NULL,           
+    user_id INT NOT NULL,
+    company_id INT NOT NULL,
+    position_id INT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NULL,
-    interview_questions TEXT NULL,
-    CONSTRAINT fk_exp_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_exp_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    CONSTRAINT fk_exp_position FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE company_reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -103,80 +110,83 @@ CREATE TABLE company_reviews (
     user_id INT NOT NULL,
     content TEXT NOT NULL,
     rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    is_anonymous TINYINT(1) DEFAULT 0 NOT NULL,
+    is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT fk_rev_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    CONSTRAINT fk_rev_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ==========================================
--- 4. ADIM: MENTÖRLÜK SİSTEMİ
+-- 4. MENTÖRLÜK SİSTEMİ (SADELEŞTİRİLMİŞ)
 -- ==========================================
 
-CREATE TABLE mentor_ads (
+CREATE TABLE mentor_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    graduate_id INT NOT NULL, 
-    expertise VARCHAR(100) NOT NULL,
-    title VARCHAR(255) NOT NULL,
+    student_id INT NOT NULL,
+    graduate_id INT NOT NULL,
+    message TEXT,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
     FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE mentor_applications (
+CREATE TABLE mentorships (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    ad_id INT NOT NULL, 
-    student_id INT NOT NULL, 
-    message TEXT,
-    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ad_id) REFERENCES mentor_ads(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE
+    student_id INT NOT NULL,
+    graduate_id INT NOT NULL,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
 );
 
 -- ==========================================
--- 5. ADIM: FORUM, MESAJLAR VE LOGLAR
+-- 5. FORUM
 -- ==========================================
 
 CREATE TABLE forum_posts (
     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
     user_id INT NOT NULL,
     category_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL, 
+    title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES forum_categories(id) ON DELETE CASCADE,
-    INDEX (user_id),
-    INDEX (category_id),
-    INDEX (created_at)
+    FULLTEXT(title, content)
 );
 
 CREATE TABLE forum_comments (
     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
     post_id INT NOT NULL,
-    user_id INT NOT NULL, 
-    parent_comment_id INT NULL, 
+    user_id INT NOT NULL,
+    parent_comment_id INT NULL,
     content TEXT NOT NULL,
     is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_comment_id) REFERENCES forum_comments(id) ON DELETE SET NULL,
-    INDEX (post_id),
-    INDEX (user_id),
-    INDEX (post_id, parent_comment_id)
+    FOREIGN KEY (parent_comment_id) REFERENCES forum_comments(id) ON DELETE SET NULL
 );
+
+-- ==========================================
+-- 6. MESAJLAŞMA (MENTORSHIP BAĞLI)
+-- ==========================================
 
 CREATE TABLE messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    sender_id INT NOT NULL, 
-    receiver_id INT NOT NULL, 
+    mentorship_id INT NOT NULL,
+    sender_id INT NOT NULL,
     message_text TEXT NOT NULL,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (mentorship_id) REFERENCES mentorships(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- ==========================================
+-- 7. AUTH LOGS
+-- ==========================================
 
 CREATE TABLE auth_logs (
     id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
@@ -185,11 +195,14 @@ CREATE TABLE auth_logs (
     user_agent TEXT NULL,
     is_success BOOLEAN DEFAULT FALSE,
     login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX (user_id),
-    INDEX (login_time)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
+/* Mevcut veritabanı şemasını sadeleştirerek mentor_ads ve mentor_applications tablolarını sildim; 
+süreci daha modüler hale getirmek amacıyla mentor_requests ve mentorships olarak güncelledim. 
+Mesajlaşma özelliğini doğrudan aktif eşleşmelere bağlamak için messages tablosuna mentorship_id alanını ekledim. 
+Ayrıca arama performansını artırmak için ilgili tablolara FULLTEXT indeksleri tanımladım 
+ve karmaşıklığı azaltmak amacıyla interview_experiences indexini experiences tablosundan çıkardım 
+bu reviewslerde içeriğe ya da forumlarda konuşulabilir */
 
 
 
