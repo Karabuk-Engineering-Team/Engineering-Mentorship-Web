@@ -113,26 +113,24 @@ CREATE TABLE company_reviews (
 -- 4. ADIM: MENTÖRLÜK SİSTEMİ
 -- ==========================================
 
-CREATE TABLE mentor_ads (
+CREATE TABLE mentor_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    graduate_id INT NOT NULL, 
-    expertise VARCHAR(100) NOT NULL,
-    title VARCHAR(255) NOT NULL,
+    student_id INT NOT NULL,
+    graduate_id INT NOT NULL,
+    message TEXT,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
     FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE mentor_applications (
+CREATE TABLE mentorships (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    ad_id INT NOT NULL, 
-    student_id INT NOT NULL, 
-    message TEXT,
-    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ad_id) REFERENCES mentor_ads(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE
-);
-
+    student_id INT NOT NULL,
+    graduate_id INT NOT NULL,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
 -- ==========================================
 -- 5. ADIM: FORUM, MESAJLAR VE LOGLAR
 -- ==========================================
