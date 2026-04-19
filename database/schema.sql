@@ -119,26 +119,26 @@ CREATE TABLE company_reviews (
 -- ==========================================
 -- 4. MENTÖRLÜK SİSTEMİ (SADELEŞTİRİLMİŞ)
 -- ==========================================
-
-CREATE TABLE mentor_requests (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    student_id INT NOT NULL,
-    graduate_id INT NOT NULL,
-    message TEXT,
-    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+CREATE TABLE mentor_ads (
+    ads_id INT PRIMARY KEY AUTO_INCREMENT,
+    graduate_id INT NOT NULL, 
+    expertise VARCHAR(100) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
     FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE mentorships (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    student_id INT NOT NULL,
-    graduate_id INT NOT NULL,
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (graduate_id) REFERENCES graduates(user_id) ON DELETE CASCADE
+CREATE TABLE mentor_applications (
+    application_id INT PRIMARY KEY AUTO_INCREMENT,
+    ads_id INT NOT NULL, 
+    student_id INT NOT NULL, 
+    message TEXT,
+    status ENUM('Waiting', 'Approved', 'Rejected') DEFAULT 'Waiting',
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ads_id) REFERENCES mentor_ads(ads_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(user_id) ON DELETE CASCADE
 );
+
 
 -- ==========================================
 -- 5. FORUM
